@@ -1,3 +1,9 @@
+# v1.1.3
+## 11/04/2026
+
+1. [](#bugfix)
+    * Packages no longer carry a site key. Installing a skeleton's dependencies can boot Grav, which writes `user/config/security-private.php`, and that file went into the zip, so every site installed from it shared one private key. The builder now deletes it before packaging (and leaves it out of the zip as well), and Grav generates a key for each site on its first request
+
 # v1.1.2
 ## 10/24/2026
 

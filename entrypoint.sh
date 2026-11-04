@@ -40,6 +40,15 @@ fi
 mkdir -p user/accounts user/config user/data user/pages user/plugins user/themes
 bin/grav install ${SILENT}
 
+# Grav writes the site's private key (user/config/security-private.php) the
+# first time anything boots it, and installing dependencies can. A key built
+# into the package would be the same on every site installed from it, so none
+# ships: Grav generates one for each site on its first request.
+drop_site_keys() {
+    find user -name security-private.php -delete
+}
+drop_site_keys
+
 USER_EXCLUDE=$INPUT_EXCLUDE
 FILENAME_VERSION="-${VERSION}"
 
@@ -52,12 +61,13 @@ if ! $INPUT_FILENAME_VERSION; then
 fi
 
 # Create a package of the skeleton (w/o admin)
-zip ${SILENT} -x "*.git/*" -x "*.github/*" -x "cache/compiled/*" -x *yarn.lock* -x *.gitignore* -x *.editorconfig* -x *.DS_Store* -x *hebe.json* -x *.dependencies* -x *.travis.yml* $USER_EXCLUDE -r "/dist/${REPOSITORY_NAME}${FILENAME_VERSION}.zip" .
+zip ${SILENT} -x "*.git/*" -x "*.github/*" -x "cache/compiled/*" -x *yarn.lock* -x *.gitignore* -x *.editorconfig* -x *.DS_Store* -x *hebe.json* -x *.dependencies* -x *.travis.yml* -x "*security-private.php" $USER_EXCLUDE -r "/dist/${REPOSITORY_NAME}${FILENAME_VERSION}.zip" .
 
 # If option enabled, also create a package with admin included
 if $INPUT_ADMIN; then
     bin/gpm install admin -y ${SILENT}
-    zip ${SILENT} -x "*.git/*" -x "*.github/*" -x "cache/compiled/*" -x *yarn.lock* -x *.gitignore* -x *.editorconfig* -x *.DS_Store* -x *hebe.json* -x *.dependencies* -x *.travis.yml* $USER_EXCLUDE -r "/dist/${REPOSITORY_NAME}+admin${FILENAME_VERSION}.zip" .
+    drop_site_keys
+    zip ${SILENT} -x "*.git/*" -x "*.github/*" -x "cache/compiled/*" -x *yarn.lock* -x *.gitignore* -x *.editorconfig* -x *.DS_Store* -x *hebe.json* -x *.dependencies* -x *.travis.yml* -x "*security-private.php" $USER_EXCLUDE -r "/dist/${REPOSITORY_NAME}+admin${FILENAME_VERSION}.zip" .
 fi
 
 # Finally make the dist packages available in the workspace
